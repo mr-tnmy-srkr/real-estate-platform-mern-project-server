@@ -1,0 +1,24 @@
+{
+  "name": "real-estate-platform-mern-project-assignment-12-server",
+  "version": "1.0.0",
+  "description": "an online platform where people can add and buy real estate",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/programming-hero-web-course1/b8a12-server-side-mr-tnmy-srkr.git"
+  },
+  "author": "Tanmoy Sarkar",
+  "license": "ISC",
+  "homepage": "https://github.com/programming-hero-web-course1/b8a12-server-side-mr-tnmy-srkr#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongodb": "^6.3.0"
+  }
+}
