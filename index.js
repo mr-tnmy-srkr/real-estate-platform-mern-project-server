@@ -18,8 +18,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@realestatecluster.oasu3cn.mongodb.net/?retryWrites=true&w=majority`
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@realestatecluster.oasu3cn.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -27,28 +26,55 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
   try {
+    client.connect();
+    const usersCollection = client.db("RealEstateDB").collection("users");
 
-     client.connect();
+   
+
+    
+    // Save user data
+    app.put("/users/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const user = req.body;
+        const query = { email: email };
+        const options = { upsert: true };
+        const isExist = await usersCollection.findOne(query);
+        console.log("user already exists", isExist);
+        if (isExist) return res.send(isExist);
+        const result = await usersCollection.updateOne(
+          query,
+          {
+            $set: { ...user, timestamp: Date.now() },
+          },
+          options
+        );
+        res.send(result);
+      } catch (dbError) {
+        res.status(500).send(dbError);
+      }
+    });
+
     // Send a ping to confirm a successful connection
     client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
-
     // await client.close();
   }
 }
 run().catch(console.dir);
 
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 
 app.listen(port, () => {
-  console.log(`🏡 Real Estate App is live and thriving on port ${port}! 🌟`)
-})
+  console.log(`🏡 Real Estate App is live and thriving on port ${port}! 🌟`);
+});
