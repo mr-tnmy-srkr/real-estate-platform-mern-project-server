@@ -34,9 +34,28 @@ async function run() {
     client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
 
-   
+    // auth related api
+    app.post("/jwt", async (req, res) => {
+      try {
+        const user = req.body;
+        console.log("I need a new jwt web Token", user);
+        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn: "7d",
+        });
+        res
+          .cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          })
+          .send({ success: true });
+      } catch (jwtError) {
+        res.status(500).send(jwtError);
+      }
+    });
 
-    
+
+
     // Save user data
     app.put("/users/:email", async (req, res) => {
       try {
