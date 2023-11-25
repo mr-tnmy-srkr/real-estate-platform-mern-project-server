@@ -33,6 +33,7 @@ async function run() {
   try {
     client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
+    const propertiesCollection = client.db("RealEstateDB").collection("properties");
 
     // auth related api
     app.post("/jwt", async (req, res) => {
@@ -78,6 +79,12 @@ async function run() {
         res.status(500).send(dbError);
       }
     });
+
+//get all properties
+   app.get("/properties", async (req, res) => {
+    const result = await propertiesCollection.find().toArray();
+    res.send(result);
+  });
 
     // Send a ping to confirm a successful connection
     client.db("admin").command({ ping: 1 });
