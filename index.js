@@ -55,7 +55,21 @@ async function run() {
       }
     });
 
-
+ // Logout & clearCookie
+ app.get("/logout", async (req, res) => {
+  try {
+    res
+      .clearCookie("token", {
+        maxAge: 0,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      })
+      .send({ success: true });
+    console.log("Logout successful");
+  } catch (logoutError) {
+    res.status(500).send(logoutError);
+  }
+});
 
     // Save user data
     app.put("/users/:email", async (req, res) => {
