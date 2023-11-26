@@ -33,7 +33,9 @@ async function run() {
   try {
     client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
-    const propertiesCollection = client.db("RealEstateDB").collection("properties");
+    const propertiesCollection = client
+      .db("RealEstateDB")
+      .collection("properties");
 
     // auth related api
     app.post("/jwt", async (req, res) => {
@@ -55,21 +57,21 @@ async function run() {
       }
     });
 
- // Logout & clearCookie
- app.get("/logout", async (req, res) => {
-  try {
-    res
-      .clearCookie("token", {
-        maxAge: 0,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      })
-      .send({ success: true });
-    console.log("Logout successful");
-  } catch (logoutError) {
-    res.status(500).send(logoutError);
-  }
-});
+    // Logout & clearCookie
+    app.get("/logout", async (req, res) => {
+      try {
+        res
+          .clearCookie("token", {
+            maxAge: 0,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          })
+          .send({ success: true });
+        console.log("Logout successful");
+      } catch (logoutError) {
+        res.status(500).send(logoutError);
+      }
+    });
 
     // Save user data
     app.put("/users/:email", async (req, res) => {
@@ -94,11 +96,18 @@ async function run() {
       }
     });
 
-//get all properties
-   app.get("/properties", async (req, res) => {
-    const result = await propertiesCollection.find().toArray();
-    res.send(result);
-  });
+    // Get user role
+    app.get("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await usersCollection.findOne({ email });
+      res.send(result);
+    });
+
+    //get all properties
+    app.get("/properties", async (req, res) => {
+      const result = await propertiesCollection.find().toArray();
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     client.db("admin").command({ ping: 1 });
