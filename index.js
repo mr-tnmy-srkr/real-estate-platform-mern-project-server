@@ -49,12 +49,13 @@ async function run() {
   try {
     client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
-    const propertiesCollection = client.db("RealEstateDB").collection("properties");
-
+    const propertiesCollection = client
+      .db("RealEstateDB")
+      .collection("properties");
 
     //Role Verification MiddleWare
     //For Admin
-    const VerifyAdmin = async (req, res, next) => {
+    const verifyAdmin = async (req, res, next) => {
       const user = req.user;
       const query = { email: user?.email };
       const result = await usersCollection.findOne(query);
@@ -64,7 +65,7 @@ async function run() {
     };
 
     //For Agent
-    const VerifyAgent = async (req, res, next) => {
+    const verifyAgent = async (req, res, next) => {
       const user = req.user;
       const query = { email: user?.email };
       const result = await usersCollection.findOne(query);
@@ -151,11 +152,31 @@ async function run() {
 
     // For Admin
     // Get all users
-    app.get("/users",verifyToken,VerifyAdmin, async (req, res) => {
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
+    //update user role
+    app.patch("/users/:email", verifyToken, verifyAdmin, async (req, res) => {
+      const email = req.params.email;
+      const updatedData = req.body;
+      const query = { email: email };
+      const updateDoc = {
+        $set: {
+          role: updatedData.status,
+        },
+      };
+      const result = await usersCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    //delete user
+    app.delete("/users/:id", verifyToken,verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     client.db("admin").command({ ping: 1 });
     console.log(
