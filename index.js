@@ -18,6 +18,22 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  console.log(token);
+  if (!token) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      console.log(err);
+      return res.status(401).send({ message: "unauthorized access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@realestatecluster.oasu3cn.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -33,9 +49,29 @@ async function run() {
   try {
     client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
-    const propertiesCollection = client
-      .db("RealEstateDB")
-      .collection("properties");
+    const propertiesCollection = client.db("RealEstateDB").collection("properties");
+
+
+    //Role Verification MiddleWare
+    //For Admin
+    const VerifyAdmin = async (req, res, next) => {
+      const user = req.user;
+      const query = { email: user?.email };
+      const result = await usersCollection.findOne(query);
+      if (!result || result?.role !== "admin")
+        return res.status(401).send({ message: "unauthorized access" });
+      next();
+    };
+
+    //For Agent
+    const VerifyAgent = async (req, res, next) => {
+      const user = req.user;
+      const query = { email: user?.email };
+      const result = await usersCollection.findOne(query);
+      if (!result || result?.role !== "agent")
+        return res.status(401).send({ message: "unauthorized access" });
+      next();
+    };
 
     // auth related api
     app.post("/jwt", async (req, res) => {
@@ -106,6 +142,17 @@ async function run() {
     //get all properties
     app.get("/properties", async (req, res) => {
       const result = await propertiesCollection.find().toArray();
+      res.send(result);
+    });
+
+    //For USer
+
+    //For Agent
+
+    // For Admin
+    // Get all users
+    app.get("/users",verifyToken,VerifyAdmin, async (req, res) => {
+      const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
