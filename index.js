@@ -10,7 +10,13 @@ const port = process.env.PORT || 5000;
 
 // middleware
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:5174"],
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://real-estate-platform-mern.web.app",
+    "https://real-estate-platform-mern.firebaseapp.com",
+   "https://real-estate-platform-mern-project.netlify.app"
+  ],
   credentials: true,
   optionSuccessStatus: 200,
 };
@@ -49,7 +55,9 @@ async function run() {
   try {
     client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
-    const wishlistCollection = client.db("RealEstateDB").collection("wishlists");
+    const wishlistCollection = client
+      .db("RealEstateDB")
+      .collection("wishlists");
     const propertiesCollection = client
       .db("RealEstateDB")
       .collection("properties");
@@ -96,7 +104,7 @@ async function run() {
     });
 
     // Logout & clearCookie
-    app.get("/logout", async (req, res) => {
+    app.post("/logout", async (req, res) => {
       try {
         res
           .clearCookie("token", {
@@ -147,7 +155,7 @@ async function run() {
       res.send(result);
     });
     //get single properties
-    app.get("/property/:id",verifyToken, async (req, res) => {
+    app.get("/property/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await propertiesCollection.findOne(query);
@@ -155,19 +163,30 @@ async function run() {
     });
 
     //For USer
-// add to wishlist
-app.post("/single-property", async (req, res) => {
-  const wishlistData = req.body;
-  const query = { oldId: wishlistData.oldId };
-  const existingUser = await wishlistCollection.findOne(query);
+    // add to wishlist
+    app.post("/wishlist/single-property", verifyToken, async (req, res) => {
+      const wishlistData = req.body;
+      const query = {
+        oldId: wishlistData.oldId,
+        userEmail: wishlistData.userEmail,
+      };
+      const existingUser = await wishlistCollection.findOne(query);
 
-  if (existingUser) {
-    return res.send({ message: "Already exists" });
-  }
+      if (existingUser) {
+        return res.send({ message: "Already exists" });
+      }
 
-  const result = await wishlistCollection.insertOne(wishlistData);
-  res.send(result);
-});
+      const result = await wishlistCollection.insertOne(wishlistData);
+      res.send(result);
+    });
+
+    //get all wishlist by user
+    app.get("/wishlist/properties/:email", verifyToken, async (req, res) => {
+      const userEmail = req.params.email;
+      const result = await wishlistCollection.find({ userEmail }).toArray();
+      res.send(result);
+    });
+
     //For Agent
 
     // For Admin
@@ -191,7 +210,7 @@ app.post("/single-property", async (req, res) => {
       res.send(result);
     });
     //delete user
-    app.delete("/users/:id", verifyToken,verifyAdmin, async (req, res) => {
+    app.delete("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await usersCollection.deleteOne(query);
