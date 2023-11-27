@@ -145,6 +145,13 @@ async function run() {
       const result = await propertiesCollection.find().toArray();
       res.send(result);
     });
+    //get single properties
+    app.get("/property/:id",verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await propertiesCollection.findOne(query);
+      res.send(result);
+    });
 
     //For USer
 
