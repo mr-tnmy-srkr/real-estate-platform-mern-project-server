@@ -49,6 +49,7 @@ async function run() {
   try {
     client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
+    const wishlistCollection = client.db("RealEstateDB").collection("wishlists");
     const propertiesCollection = client
       .db("RealEstateDB")
       .collection("properties");
@@ -154,7 +155,19 @@ async function run() {
     });
 
     //For USer
+// add to wishlist
+app.post("/single-property", async (req, res) => {
+  const wishlistData = req.body;
+  const query = { oldId: wishlistData.oldId };
+  const existingUser = await wishlistCollection.findOne(query);
 
+  if (existingUser) {
+    return res.send({ message: "Already exists" });
+  }
+
+  const result = await wishlistCollection.insertOne(wishlistData);
+  res.send(result);
+});
     //For Agent
 
     // For Admin
