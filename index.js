@@ -195,8 +195,18 @@ async function run() {
   res.send(result);
 });
 //find a property which a agent adds
-
-
+app.get("/added-property/:email", verifyToken,verifyAgent, async (req, res) => {
+  const agentEmail = req.params.email;
+  const result = await propertiesCollection.find({ agentEmail }).toArray();
+  res.send(result);
+});
+//Delete a property which a agent adds
+app.delete("/delete-property/:id", verifyToken,verifyAgent, async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await propertiesCollection.deleteOne(query);
+  res.send(result);
+});
 
     // For Admin
     // Get all users
