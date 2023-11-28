@@ -188,6 +188,15 @@ async function run() {
     });
 
     //For Agent
+ // Save a room in database
+ app.post("/add-property", verifyToken,verifyAgent, async (req, res) => {
+  const propertyData = req.body;
+  const result = await propertiesCollection.insertOne(propertyData);
+  res.send(result);
+});
+//find a property which a agent adds
+
+
 
     // For Admin
     // Get all users
