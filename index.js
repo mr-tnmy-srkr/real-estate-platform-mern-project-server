@@ -6,6 +6,8 @@ const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
+// npm install --save stripe
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -55,6 +57,7 @@ async function run() {
   try {
     client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
+    const bookingsCollection = client.db("RealEstateDB").collection("bookings");
     const wishlistCollection = client
       .db("RealEstateDB")
       .collection("wishlists");
@@ -186,6 +189,16 @@ async function run() {
       const result = await wishlistCollection.find({ userEmail }).toArray();
       res.send(result);
     });
+
+    //get wishlist by email for property bought
+    app.get("/user/wishlist/properties/:email", verifyToken, async (req, res) => {
+      const userEmail = req.params.email;
+      const query = {userEmail:userEmail,status: { $exists: true }}
+      const result = await wishlistCollection.find(query).toArray();
+      res.send(result);
+    });
+
+
 
     //fetch single wishlist by id
     app.get("/wishlist/single-property/:id", verifyToken, async (req, res) => {
@@ -322,6 +335,30 @@ app.patch("/wishlist/properties/:id", verifyToken, verifyAgent, async (req, res)
       const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
+
+
+// Booking/Payment
+  // Generate client secret for stripe payment
+  app.post("/create-payment-intent", verifyToken, async (req, res) => {
+    const { price } = req.body;
+    const amount = parseInt(price * 100);
+    if (!price || amount < 1) return;
+    const { client_secret } = await stripe.paymentIntents.create({
+      amount: amount,
+      // currency: "usd",
+      currency: "inr",
+      payment_method_types: ["card"],
+    });
+    res.send({ clientSecret: client_secret });
+  });
+
+  // Save booking info in booking collection
+  app.post("/bookings", verifyToken, async (req, res) => {
+    const booking = req.body;
+    const result = await bookingsCollection.insertOne(booking);
+    res.send(result);
+  });
+
     // Send a ping to confirm a successful connection
     client.db("admin").command({ ping: 1 });
     console.log(
