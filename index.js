@@ -195,19 +195,23 @@ async function run() {
       res.send(result);
     });
     //update wishlist after make an offer
-    app.put("/wishlist/single-property/update/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const updatedData = req.body;
-      const query =  { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: {
-         ...updatedData
-        },
-      };
-      const result = await wishlistCollection.updateOne(query, updateDoc);
-      res.send(result);
-    });
+    app.put(
+      "/wishlist/single-property/update/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const updatedData = req.body;
+        const query = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: {
+            ...updatedData,
+          },
+        };
+        const result = await wishlistCollection.updateOne(query, updateDoc);
+        res.send(result);
+      }
+    );
     //For Agent
     // Save a room in database
     app.post("/add-property", verifyToken, verifyAgent, async (req, res) => {
@@ -264,6 +268,33 @@ async function run() {
         res.send(result);
       }
     );
+
+    // get all offered wishlist
+    app.get(
+      "/wishlist/properties",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const query = { status: { $exists: true } };
+        const result = await wishlistCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
+
+//change requested properties status 
+app.patch("/wishlist/properties/:id", verifyToken, verifyAgent, async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+  const query = { _id: new ObjectId(id) };
+  const updateDoc = {
+    $set: {
+    status : updatedData.status,
+    },
+  };
+  const result = await wishlistCollection.updateOne(query, updateDoc);
+  res.send(result);
+});
+
     // For Admin
     // Get all users
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
