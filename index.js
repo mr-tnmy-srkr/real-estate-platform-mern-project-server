@@ -191,14 +191,16 @@ async function run() {
     });
 
     //get wishlist by email for property bought
-    app.get("/user/wishlist/properties/:email", verifyToken, async (req, res) => {
-      const userEmail = req.params.email;
-      const query = {userEmail:userEmail,status: { $exists: true }}
-      const result = await wishlistCollection.find(query).toArray();
-      res.send(result);
-    });
-
-
+    app.get(
+      "/user/wishlist/properties/:email",
+      verifyToken,
+      async (req, res) => {
+        const userEmail = req.params.email;
+        const query = { userEmail: userEmail, status: { $exists: true } };
+        const result = await wishlistCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
 
     //fetch single wishlist by id
     app.get("/wishlist/single-property/:id", verifyToken, async (req, res) => {
@@ -225,6 +227,19 @@ async function run() {
         res.send(result);
       }
     );
+
+    //delete wishlist data /
+    app.delete(
+      "/wishlist/single-property/delete/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await wishlistCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
+
     //For Agent
     // Save a room in database
     app.post("/add-property", verifyToken, verifyAgent, async (req, res) => {
@@ -294,19 +309,24 @@ async function run() {
       }
     );
 
-//change requested properties status 
-app.patch("/wishlist/properties/:id", verifyToken, verifyAgent, async (req, res) => {
-  const id = req.params.id;
-  const updatedData = req.body;
-  const query = { _id: new ObjectId(id) };
-  const updateDoc = {
-    $set: {
-    status : updatedData.status,
-    },
-  };
-  const result = await wishlistCollection.updateOne(query, updateDoc);
-  res.send(result);
-});
+    //change requested properties status
+    app.patch(
+      "/wishlist/properties/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const id = req.params.id;
+        const updatedData = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            status: updatedData.status,
+          },
+        };
+        const result = await wishlistCollection.updateOne(query, updateDoc);
+        res.send(result);
+      }
+    );
 
     // For Admin
     // Get all users
@@ -336,29 +356,58 @@ app.patch("/wishlist/properties/:id", verifyToken, verifyAgent, async (req, res)
       res.send(result);
     });
 
-
-// Booking/Payment
-  // Generate client secret for stripe payment
-  app.post("/create-payment-intent", verifyToken, async (req, res) => {
-    const { price } = req.body;
-    const amount = parseInt(price * 100);
-    if (!price || amount < 1) return;
-    const { client_secret } = await stripe.paymentIntents.create({
-      amount: amount,
-      // currency: "usd",
-      currency: "inr",
-      payment_method_types: ["card"],
+    // Booking/Payment
+    // Generate client secret for stripe payment
+    app.post("/create-payment-intent", verifyToken, async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      if (!price || amount < 1) return;
+      const { client_secret } = await stripe.paymentIntents.create({
+        amount: amount,
+        // currency: "usd",
+        currency: "inr",
+        // https://stripe.com/docs/api/payment_intents
+        payment_method_types: ["card"],
+      });
+      res.send({ clientSecret: client_secret });
     });
-    res.send({ clientSecret: client_secret });
-  });
 
-  // Save booking info in booking collection
-  app.post("/bookings", verifyToken, async (req, res) => {
-    const booking = req.body;
-    const result = await bookingsCollection.insertOne(booking);
-    res.send(result);
-  });
+    // Save booking info in booking collection
+    app.post("/bookings", verifyToken, async (req, res) => {
+      const booking = req.body;
+      const result = await bookingsCollection.insertOne(booking);
+      res.send(result);
+    });
+    // Update room booking status
+    app.patch("/booking/status/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: data.status,
+        },
+      };
+      const result = await wishlistCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
 
+    // Get all bookings for user
+    app.get("/bookings/user", verifyToken, async (req, res) => {
+      const email = req.query.email;
+      if (!email) return res.send([]);
+      const query = { userEmail: email };
+      const result = await bookingsCollection.find(query).toArray();
+      res.send(result);
+    });
+    // Get all bookings for agent
+    app.get("/bookings/agent", verifyToken, verifyAgent, async (req, res) => {
+      const email = req.query.email;
+      if (!email) return res.send([]);
+      const query = { agentEmail: email };
+      const result = await bookingsCollection.find(query).toArray();
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     client.db("admin").command({ ping: 1 });
     console.log(
