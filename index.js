@@ -355,7 +355,19 @@ async function run() {
       const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
-
+//update property verification status
+app.patch("/properties/update/:id", verifyToken, verifyAdmin, async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+  const query = { _id: new ObjectId(id) };
+  const updateDoc = {
+    $set: {
+      ...updatedData
+    },
+  };
+  const result = await propertiesCollection.updateOne(query, updateDoc);
+  res.send(result);
+});
     // Booking/Payment
     // Generate client secret for stripe payment
     app.post("/create-payment-intent", verifyToken, async (req, res) => {
