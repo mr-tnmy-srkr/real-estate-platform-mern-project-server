@@ -15,7 +15,7 @@ const corsOptions = {
     "http://localhost:5174",
     "https://real-estate-platform-mern.web.app",
     "https://real-estate-platform-mern.firebaseapp.com",
-   "https://real-estate-platform-mern-project.netlify.app"
+    "https://real-estate-platform-mern-project.netlify.app",
   ],
   credentials: true,
   optionSuccessStatus: 200,
@@ -187,41 +187,83 @@ async function run() {
       res.send(result);
     });
 
-    //For Agent
- // Save a room in database
- app.post("/add-property", verifyToken,verifyAgent, async (req, res) => {
-  const propertyData = req.body;
-  const result = await propertiesCollection.insertOne(propertyData);
-  res.send(result);
-});
-//find a property which a agent adds
-app.get("/added-property/:email", verifyToken,verifyAgent, async (req, res) => {
-  const agentEmail = req.params.email;
-  const result = await propertiesCollection.find({ agentEmail }).toArray();
-  res.send(result);
-});
-//Delete a property which a agent adds
-app.delete("/delete-property/:id", verifyToken,verifyAgent, async (req, res) => {
-  const id = req.params.id;
-  const query = { _id: new ObjectId(id) };
-  const result = await propertiesCollection.deleteOne(query);
-  res.send(result);
-});
-
-    //update a property
-    app.put("/update-property/:id", verifyToken,verifyAgent, async (req, res) => {
+    //fetch single wishlist by id
+    app.get("/wishlist/single-property/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await wishlistCollection.findOne(query);
+      res.send(result);
+    });
+    //update wishlist after make an offer
+    app.put("/wishlist/single-property/update/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const updatedData = req.body;
-      const query = { _id: new ObjectId(id) };
+      const query =  { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateDoc = {
         $set: {
-          ...updatedData,
+         ...updatedData
         },
       };
-      const result = await propertiesCollection.updateOne(query, updateDoc, options);
+      const result = await wishlistCollection.updateOne(query, updateDoc);
       res.send(result);
     });
+    //For Agent
+    // Save a room in database
+    app.post("/add-property", verifyToken, verifyAgent, async (req, res) => {
+      const propertyData = req.body;
+      const result = await propertiesCollection.insertOne(propertyData);
+      res.send(result);
+    });
+    //find a property which a agent adds
+    app.get(
+      "/added-property/:email",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const agentEmail = req.params.email;
+        const result = await propertiesCollection
+          .find({ agentEmail })
+          .toArray();
+        res.send(result);
+      }
+    );
+    //Delete a property which a agent adds
+    app.delete(
+      "/delete-property/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await propertiesCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
+
+    //update a property
+    app.put(
+      "/update-property/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const id = req.params.id;
+        const updatedData = req.body;
+        const query = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: {
+            ...updatedData,
+          },
+        };
+        const result = await propertiesCollection.updateOne(
+          query,
+          updateDoc,
+          options
+        );
+        res.send(result);
+      }
+    );
     // For Admin
     // Get all users
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
