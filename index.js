@@ -208,6 +208,20 @@ app.delete("/delete-property/:id", verifyToken,verifyAgent, async (req, res) => 
   res.send(result);
 });
 
+    //update a property
+    app.put("/update-property/:id", verifyToken,verifyAgent, async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body;
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          ...updatedData,
+        },
+      };
+      const result = await propertiesCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
     // For Admin
     // Get all users
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
