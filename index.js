@@ -248,30 +248,43 @@ async function run() {
       const result = await reviewsCollection.insertOne(reviewData);
       res.send(result);
     });
-
-    //get a property review by oldId
+    //get all user's review for admin
+    app.get("/all-user/review",verifyToken,verifyAdmin, async (req, res) => {
+      const result = await reviewsCollection.find().toArray();
+      console.log(result);
+      res.send(result);
+    })
+    //get a review by oldId
     app.get("/property/get-review/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
-      const query = {oldId: id};
+      const query = { oldId: id };
       const result = await reviewsCollection.find(query).toArray();
       res.send(result);
-    });
-    //get a property review by user email
-    app.get("/property/user/get-review/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      const query = {userEmail: email};
-      const result = await reviewsCollection.find(query).toArray();
-      res.send(result);
-    });
-//
+    }); 
+    //get a review by user email
+    app.get(
+      "/property/user/get-review/:email",
+      verifyToken,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = { userEmail: email };
+        const result = await reviewsCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
+    //
 
-    //get a property review by user email
-    app.get("/property/user/delete-review/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
-      const result = await reviewsCollection.deleteOne(query);
-      res.send(result);
-    });
+    //delete a property review by user email
+    app.delete(
+      "/property/user/delete-review/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await reviewsCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
 
     //For Agent
     // Save a room in database
@@ -458,6 +471,7 @@ async function run() {
       const result = await bookingsCollection.find(query).toArray();
       res.send(result);
     });
+
     // Send a ping to confirm a successful connection
     client.db("admin").command({ ping: 1 });
     console.log(
