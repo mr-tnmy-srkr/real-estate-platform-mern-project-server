@@ -58,6 +58,7 @@ async function run() {
     client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
     const bookingsCollection = client.db("RealEstateDB").collection("bookings");
+    const reviewsCollection = client.db("RealEstateDB").collection("reviews");
     const wishlistCollection = client
       .db("RealEstateDB")
       .collection("wishlists");
@@ -160,6 +161,7 @@ async function run() {
     //get single properties
     app.get("/property/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
+      console.log("hh",id);
       const query = { _id: new ObjectId(id) };
       const result = await propertiesCollection.findOne(query);
       res.send(result);
@@ -239,6 +241,13 @@ async function run() {
         res.send(result);
       }
     );
+
+//post a review
+app.post("/add-review", verifyToken, async (req, res) => {
+  const reviewData = req.body;
+  const result = await reviewsCollection.insertOne(reviewData);
+  res.send(result);
+});
 
     //For Agent
     // Save a room in database
