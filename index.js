@@ -188,7 +188,8 @@ async function run() {
     //get all wishlist by user
     app.get("/wishlist/properties/:email", verifyToken, async (req, res) => {
       const userEmail = req.params.email;
-      const result = await wishlistCollection.find({ userEmail }).toArray();
+      const query = { userEmail: userEmail, status: { $exists: false } };
+      const result = await wishlistCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -225,7 +226,7 @@ async function run() {
             ...updatedData,
           },
         };
-        const result = await wishlistCollection.updateOne(query, updateDoc);
+        const result = await wishlistCollection.updateOne(query, updateDoc,options);
         res.send(result);
       }
     );
@@ -251,7 +252,6 @@ async function run() {
     //get all user's review for admin
     app.get("/all-user/review",verifyToken,verifyAdmin, async (req, res) => {
       const result = await reviewsCollection.find().toArray();
-      console.log(result);
       res.send(result);
     })
     //get a review by oldId
@@ -272,7 +272,7 @@ async function run() {
         res.send(result);
       }
     );
-    //
+   
 
     //delete a property review by user email
     app.delete(
@@ -344,12 +344,13 @@ async function run() {
     );
 
     // get all offered wishlist
-    app.get(
-      "/wishlist/properties",
+  app.get(
+      "/wishlist/requested-properties/:email",
       verifyToken,
       verifyAgent,
       async (req, res) => {
-        const query = { status: { $exists: true } };
+        const email = req.params.email;
+        const query = { agentEmail:email ,status: { $exists: true }};
         const result = await wishlistCollection.find(query).toArray();
         res.send(result);
       }
