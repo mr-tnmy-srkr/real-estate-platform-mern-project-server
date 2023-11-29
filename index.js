@@ -256,6 +256,22 @@ async function run() {
       const result = await reviewsCollection.find(query).toArray();
       res.send(result);
     });
+    //get a property review by user email
+    app.get("/property/user/get-review/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = {userEmail: email};
+      const result = await reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
+//
+
+    //get a property review by user email
+    app.get("/property/user/delete-review/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await reviewsCollection.deleteOne(query);
+      res.send(result);
+    });
 
     //For Agent
     // Save a room in database
