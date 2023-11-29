@@ -161,7 +161,7 @@ async function run() {
     //get single properties
     app.get("/property/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
-      console.log("hh",id);
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await propertiesCollection.findOne(query);
       res.send(result);
@@ -242,12 +242,20 @@ async function run() {
       }
     );
 
-//post a review
-app.post("/add-review", verifyToken, async (req, res) => {
-  const reviewData = req.body;
-  const result = await reviewsCollection.insertOne(reviewData);
-  res.send(result);
-});
+    //post a review
+    app.post("/property/add-review", verifyToken, async (req, res) => {
+      const reviewData = req.body;
+      const result = await reviewsCollection.insertOne(reviewData);
+      res.send(result);
+    });
+
+    //get a property review by oldId
+    app.get("/property/get-review/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = {oldId: id};
+      const result = await reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
 
     //For Agent
     // Save a room in database
@@ -364,19 +372,24 @@ app.post("/add-review", verifyToken, async (req, res) => {
       const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
-//update property verification status
-app.patch("/properties/update/:id", verifyToken, verifyAdmin, async (req, res) => {
-  const id = req.params.id;
-  const updatedData = req.body;
-  const query = { _id: new ObjectId(id) };
-  const updateDoc = {
-    $set: {
-      ...updatedData
-    },
-  };
-  const result = await propertiesCollection.updateOne(query, updateDoc);
-  res.send(result);
-});
+    //update property verification status
+    app.patch(
+      "/properties/update/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const updatedData = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            ...updatedData,
+          },
+        };
+        const result = await propertiesCollection.updateOne(query, updateDoc);
+        res.send(result);
+      }
+    );
     // Booking/Payment
     // Generate client secret for stripe payment
     app.post("/create-payment-intent", verifyToken, async (req, res) => {
