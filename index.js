@@ -250,7 +250,7 @@ async function run() {
       res.send(result);
     });
     //get all user's review for admin
-    app.get("/all-user/review",verifyToken,verifyAdmin, async (req, res) => {
+    app.get("/all-user/review",verifyToken, async (req, res) => {
       const result = await reviewsCollection.find().toArray();
       res.send(result);
     })
@@ -487,7 +487,19 @@ async function run() {
     });
 
 
-
+ // Update property by admin for adv
+ app.patch("/update/property/:id", verifyToken, async (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+  const query = { _id: new ObjectId(id) };
+  const updateDoc = {
+    $set: {
+      adv: data.adv,
+    },
+  };
+  const result = await propertiesCollection.updateOne(query, updateDoc);
+  res.send(result);
+});
 
 
 
