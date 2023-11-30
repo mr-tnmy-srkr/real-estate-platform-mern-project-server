@@ -406,6 +406,9 @@ async function run() {
         },
       };
       const result = await usersCollection.updateOne(query, updateDoc);
+      //if agent is fraud
+      const query2 = { agentEmail: email };
+      await propertiesCollection.updateOne(query2, updateDoc)
       res.send(result);
     });
     //delete user
