@@ -374,7 +374,20 @@ async function run() {
         res.send(result);
       }
     );
-
+    //total sold amount by agent email
+    app.get("/agent-sale/:email",verifyToken,verifyAgent, async (req, res) => {
+      const email = req.params.email;
+      const query = { agentEmail: email };
+        const bookingsDetails = await bookingsCollection
+          .find(query, { projection: { offerPrice: 1} })
+          .toArray();
+       
+         const totalSale = bookingsDetails.reduce(
+          (sum, data) => sum + Number((data.offerPrice)),
+          0
+        ); 
+      res.json( totalSale );
+        })
     // For Admin
     // Get all users
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
@@ -472,6 +485,11 @@ async function run() {
       const result = await bookingsCollection.find(query).toArray();
       res.send(result);
     });
+
+
+
+
+
 
     // Send a ping to confirm a successful connection
     client.db("admin").command({ ping: 1 });
