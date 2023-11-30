@@ -145,6 +145,24 @@ async function run() {
         res.status(500).send(dbError);
       }
     });
+    // update user data
+    app.patch("/users/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const userName = req.body;
+        const query = { email: email };
+    
+        const result = await usersCollection.updateOne(
+          query,
+          {
+            $set: { name:userName.name },
+          }
+        );
+        res.send(result);
+      } catch (dbError) {
+        res.status(500).send(dbError);
+      }
+    });
 
     // Get user role
     app.get("/user/:email", async (req, res) => {
