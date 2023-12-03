@@ -55,7 +55,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    client.connect();
+    // client.connect();
     const usersCollection = client.db("RealEstateDB").collection("users");
     const bookingsCollection = client.db("RealEstateDB").collection("bookings");
     const reviewsCollection = client.db("RealEstateDB").collection("reviews");
@@ -146,7 +146,7 @@ async function run() {
       }
     });
     // update user data
-    app.patch("/users/:email", async (req, res) => {
+    app.patch("/users/name/:email", async (req, res) => {
       try {
         const email = req.params.email;
         const userName = req.body;
@@ -162,7 +162,7 @@ async function run() {
       } catch (dbError) {
         res.status(500).send(dbError);
       }
-    });
+    }); 
 
     // Get user role
     app.get("/user/:email", async (req, res) => {
@@ -268,7 +268,7 @@ async function run() {
       res.send(result);
     });
     //get all user's review for admin
-    app.get("/all-user/review",verifyToken, async (req, res) => {
+    app.get("/all-user/review", async (req, res) => {
       const result = await reviewsCollection.find().toArray();
       res.send(result);
     })
@@ -426,7 +426,7 @@ async function run() {
       const result = await usersCollection.updateOne(query, updateDoc);
       //if agent is fraud
       const query2 = { agentEmail: email };
-      await propertiesCollection.updateOne(query2, updateDoc)
+      await propertiesCollection.updateMany(query2, updateDoc)
       res.send(result);
     });
     //delete user
@@ -525,7 +525,7 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    client.db("admin").command({ ping: 1 });
+    // client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
